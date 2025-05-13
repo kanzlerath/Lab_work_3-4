@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Исходный код программы</title>
+    <style>
+        body {
+            font-family: Segoe UI, sans-serif;
+            margin: 30px;
+            line-height: 1.7;
+        }
+
+        h1, h2 {
+            margin-top: 25px;
+        }
+
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: Consolas, monospace;
+            line-height: 1.4;
+        }
+
+        code {
+            font-family: Consolas, monospace;
+        }
+
+        .code-block {
+            margin: 20px 0;
+        }
+
+        .filename {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Исходный код программы</h1>
+
+
+    <div class="code-block">
+        <div class="filename">Parser.cs - Парсер</div>
+        <pre><code>
+using System;
+using System.Collections.Generic;
+
+namespace Lab1_compile
+{
+    internal class Parser
+    {
+        private string id;
+        private int state;
+        private Stroke stroke;
+        private List<ParseError> errors;
+
+        public List<ParseError> GetErrors()
+        {
+            return errors;
+        }
+
+        public bool Parse(Stroke c)
+        {
+            stroke = c;
+            state = 1;
+            id = "";
+            errors = new List<ParseError>();
+
+            while (state != 16)
+            {
+                switch (state)
+                {
+                    case 1:
+                        State1();
+                        break;
+                    case 2:
+                        State2();
+                        break;
+                    case 3:
+                        State3();
+                        break;
+                    case 4:
+                        State4();
+                        break;
+                    case 5:
+                        State5();
+                        break;
+                    case 6:
+                        State6();
+                        break;
+                    case 7:
+                        State7();
+                        break;
+                    case 8:
+                        State8();
+                        break;
+                    case 9:
+                        State9();
+                        break;
+                    case 10:
+                        State10();
+                        break;
+                    case 11:
+                        State11();
+                        break;
+                    case 12:
+                        State12();
+                        break;
+                    case 13:
+                        State13();
+                        break;
+                    case 14:
+                        State14();
+                        break;
+                    case 15:
+                        State15();
+                        break;
+                }
+            }
+
+            return true;
+        }
+
+        private void HandleError(string errorMessage, string incorrectFragment, Character c)
+        {
+            errors.Add(new ParseError(errorMessage, incorrectFragment, c.Idx));
+        }
+
+        private bool tryStop()
+        {
+            char next = stroke.Next().Char;
+
+            if (next == '\0' || next == ';')
+            {
+                stroke.GetNext();
+                state = 16;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void State1()
+        {
+            Character c = stroke.GetNext();
+
+            if (IsLetter(c.Char))
+            {
+                state = 2;
+            }
+            else
+            {
+                string remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsLetter(stroke.Next().Char))
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nОжидался идентификатор.", remStr, firstIncorrect);
+            }
+        }
+
+        private void State2()
+        {
+            Character c = stroke.GetNext();
+
+            if (c.Char == '=')
+            {
+                state = 3;
+            }
+            else if (IsLetter(c.Char))
+            {
+                state = 2;
+            }
+            else if (IsDigit(c.Char))
+            {
+                state = 2;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsLetter(stroke.Next().Char) && !IsDigit(stroke.Next().Char) && stroke.Next().Char != '=' && !isSpace(stroke.Next().Char))
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+
+        private bool isSpace(char c)
+        {
+            return c == ' ' || c == '\t' || c == '\r';
+        }
+
+        private void State3()
+        {
+            Character c = stroke.GetNext();
+
+            if (IsLetter(c.Char))
+            {
+                state = 4;
+                id += c.Char;
+            }
+            else
+            {
+                string remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsLetter(stroke.Next().Char))
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nОжидалось ключевое слово complex.", remStr, firstIncorrect);
+            }
+        }
+
+        private void State4()
+        {
+            Character c = stroke.GetNext();
+            if (IsLetter(c.Char))
+            {
+                state = 4;
+                id += c.Char;
+            }
+            else if (c.Char == '(')
+            {
+                state = 5;
+                if (!id.Equals("complex"))
+                {
+                    int errorPosition = c.Idx - id.Length;
+                    HandleError("\nОжидалось ключевое слово complex.", id, new Character(id[0], errorPosition));
+                }
+            }
+            else
+            {
+                if (!id.Equals("complex"))
+                {
+                    int errorPosition = c.Idx - id.Length;
+                    HandleError("\nОжидалось ключевое слово complex.", id, new Character(id[0], errorPosition));
+                }
+                HandleError("\nОжидался символ '('.", null, c);
+                state = 5;
+                stroke.MoveBack();
+            }
+        }
+
+        private void State5()
+        {
+            Character c = stroke.GetNext();
+
+            if (c.Char == '+' || c.Char == '-')
+            {
+                state = 6;
+            }
+            else if (IsDigit(c.Char)) state = 6;
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char) && stroke.Next().Char != '+' && stroke.Next().Char != '-' && stroke.Next().Char != ',')
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                if (stroke.Next().Char == ',')
+                {
+                    state = 9;
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+
+        private void State6()
+        {
+            Character c = stroke.GetNext();
+            if (c.Char >= '0' && c.Char <= '9')
+            {
+                state = 7;
+            }
+            else if (c.Char == '.')
+            {
+                state = 8;
+            }
+            else if (c.Char == ',')
+            {
+                state = 10;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char) && stroke.Next().Char != '.' && stroke.Next().Char != ',')
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+
+        private void State7()
+        {
+            Character c = stroke.GetNext();
+            if (c.Char >= '0' && c.Char <= '9')
+            {
+                state = 7;
+            }
+            else if (c.Char == '.')
+            {
+                state = 8;
+            }
+            else if (c.Char == ',')
+            {
+                state = 10;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char) && stroke.Next().Char != '.' && stroke.Next().Char != ',')
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+
+        private void State8()
+        {
+            Character c = stroke.GetNext();
+            if (c.Char >= '0' && c.Char <= '9')
+            {
+                state = 9;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char))
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+
+        private void State9()
+        {
+            Character c = stroke.GetNext();
+            if (c.Char >= '0' && c.Char <= '9')
+            {
+                state = 9;
+            }
+            else if (c.Char == ',')
+            {
+                state = 10;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char) && stroke.Next().Char != ',')
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+        private void State10()
+        {
+            Character c = stroke.GetNext();
+
+            if (c.Char == '+' || c.Char == '-')
+            {
+                state = 11;
+                stroke.GetNext();
+            }
+            else if (IsDigit(c.Char)) state = 11;
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char) && stroke.Next().Char != '+' && stroke.Next().Char != '-' && stroke.Next().Char != ')')
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                if (stroke.Next().Char == ')')
+                {
+                    state = 14;
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+        private void State11()
+        {
+            Character c = stroke.GetNext();
+            if (c.Char >= '0' && c.Char <= '9')
+            {
+                state = 12;
+            }
+            else if (c.Char == '.')
+            {
+                state = 13;
+            }
+            else if (c.Char == ')')
+            {
+                state = 15;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char) && stroke.Next().Char != '.' && stroke.Next().Char != ')')
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+        private void State12()
+        {
+            Character c = stroke.GetNext();
+            if (c.Char >= '0' && c.Char <= '9')
+            {
+                state = 12;
+            }
+            else if (c.Char == '.')
+            {
+                state = 13;
+            }
+            else if (c.Char == ')')
+            {
+                state = 15;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char) && stroke.Next().Char != '.' && stroke.Next().Char != ')')
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+        private void State13()
+        {
+            Character c = stroke.GetNext();
+            if (c.Char >= '0' && c.Char <= '9')
+            {
+                state = 14;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char))
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+
+        private void State14()
+        {
+            Character c = stroke.GetNext();
+            if (c.Char >= '0' && c.Char <= '9')
+            {
+                state = 14;
+            }
+            else if (c.Char == ')')
+            {
+                state = 15;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (!IsDigit(stroke.Next().Char) && stroke.Next().Char != ')')
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+
+        private void State15()
+        {
+            Character c = stroke.GetNext();
+            if (c.Char == ';')
+            {
+                state = 16;
+            }
+            else
+            {
+                String remStr = "";
+                Character firstIncorrect = c;
+
+                while (stroke.Next().Char != ';')
+                {
+                    if (tryStop()) break;
+                    remStr += c.Char;
+                    c = stroke.GetNext();
+                }
+                remStr += c.Char;
+                HandleError("\nНеожиданный символ: '" + firstIncorrect.Str + "'.", remStr, firstIncorrect);
+            }
+        }
+        private bool IsLetter(char c)
+        {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+        }
+
+        private bool IsDigit(char c)
+        {
+            return (c >= '0' && c <= '9');
+        }
+    }
+}
+
+</code></pre>
+    </div>
+
+
+
+    <div class="code-block">
+        <div class="filename">ParseError.cs - Класс ошибок</div>
+        <pre><code>
+namespace Lab1_compile
+{
+    internal class ParseError : Exception
+    {
+        private int _idx;
+        public int Idx
+        {
+            get
+            {
+                return _idx;
+            }
+        }
+        private String incorrStr;
+
+        public String IncorrStr
+        {
+            get
+            {
+                return incorrStr;
+            }
+        }
+
+        public ParseError(String msg, String rem, int index) : base(msg)
+        {
+            incorrStr = rem;
+            _idx = index;
+        }
+    }
+}
+
+</code></pre>
+    </div>
+
+    <div class="code-block">
+        <div class="filename">Stroke.cs - Входная строка</div>
+        <pre><code>
+namespace Lab1_compile
+{
+    class Character
+    {
+        private char _c;
+        private int _idx;
+        public char Char
+        {
+            get {return _c;}
+        }
+        public String Str
+        {
+            get
+            {
+                if (_c == '\0') return "<конец файла>";
+                else if (_c == '\n') return "<новая строка>";
+                else return "" + _c;
+            }
+        }
+
+        public int Idx
+        {
+            get {return _idx;}
+        }
+
+        public Character(char c, int idx)
+        {
+            _c = c;
+            _idx = idx;
+        }
+    }
+    internal class Stroke
+    {
+        private char[] chars;
+        private int index;
+
+        public Stroke(string text)
+        {
+            chars = text.ToCharArray();
+            index = 0;
+        }
+
+        public Character GetNext()
+        {
+            SkipSpaces();
+            if (index == chars.Length) return new Character('\0', index);
+            Character result = new Character(chars[index], index);
+            index++;
+            return result;
+        }
+
+        private bool isSpace(char c)
+        {
+            return (c == ' ' || c == '\t' || c == '\r');
+        }
+
+        public void SkipSpaces()
+        {
+            while (index < chars.Length && isSpace(chars[index])) index++;
+        }
+
+        public Character Next()
+        {
+            SkipSpaces();
+            if (index == chars.Length) return new Character('\0', index);
+            return new Character(chars[index], index);
+        }
+
+        public void MoveBack()
+        {
+            if (index > 0) index--;
+        }
+    }
+}
+
+</code></pre>
+    </div>
+
+    <div class="code-block">
+        <div class="filename">Form1.cs - Метод для парсинга</div>
+        <pre><code>
+private void button9_Click(object sender, EventArgs e)
+{
+    if (tabControl1.SelectedTab is EditorTab tab)
+    {
+        SplitContainer panel = tab.Controls[0] as SplitContainer;
+        RichTextBox editor = panel.Panel1.Controls[0] as RichTextBox;
+        RichTextBox outputBox = panel.Panel2.Controls[0] as RichTextBox;
+        ClearErrorHighlights(editor);
+        Stroke stroke = new Stroke(editor.Text);
+        Parser parser = new Parser();
+
+        outputBox.Text = "";
+
+        int count = 0;
+
+        while (stroke.Next().Char != '\0')
+        {
+            parser.Parse(stroke);
+
+            var errors = parser.GetErrors();
+
+            foreach (var error in errors)
+            {
+                count++;
+                outputBox.Text += error.Message;
+                if (error.IncorrStr != null)
+                {
+                    outputBox.Text += " (Отброшенный фрагмент: '" + error.IncorrStr + "' на позиции: " + error.Idx + ")";
+                    editor.Select(error.Idx, error.IncorrStr.Length);
+                }
+                else
+                {
+                    editor.Select(error.Idx, 1);
+                }
+                editor.SelectionBackColor = Color.Red;
+                editor.DeselectAll();
+                shouldClearHighlight = true;
+            }
+
+        }
+
+        if (count == 0)
+        {
+            outputBox.Text += "Ошибок нет.\r\n";
+        }
+        else
+        {
+            outputBox.Text += "\nОбнаружено " + count + " ошибок.\r\n";
+        }
+    }
+}
+        </code></pre>
+    </div>
+</body>
+</html>
