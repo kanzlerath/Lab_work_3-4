@@ -33,64 +33,61 @@ z3 = complex(4.9, 82);
 
 ## Разработанная грамматика:
 
-Определим грамматику объявления и определения структуры на языке С G[‹Start›] в нотации Хомского с продукциями P:
+Определим грамматику объявления и определения структуры на языке С G[‹C›] в нотации Хомского с продукциями P:
 ```bnf
-&lt;C&gt; → &lt;Letter&gt;&lt;A&gt;
-&lt;A&gt; → &lt;Letter&gt;&lt;B&gt;
-&lt;B&gt; → &lt;Letter&gt;&lt;B&gt;
-&lt;B&gt; → &lt;Digit&gt;&lt;D&gt;
-&lt;D&gt; → &lt;Digit&gt;&lt;D&gt;
-&lt;B&gt; → '='&lt;E&gt;
-&lt;D&gt; → '='&lt;E&gt;
-&lt;E&gt; → 'complex'&lt;F&gt;
-&lt;F&gt; → '('&lt;G&gt;
-&lt;G&gt; → '+'&lt;H&gt;
-&lt;G&gt; → '-'&lt;H&gt;
-&lt;G&gt; → &lt;Digit&gt;&lt;J&gt;
-&lt;H&gt; → &lt;Digit&gt;&lt;J&gt;
-&lt;J&gt; → &lt;Digit&gt;&lt;J&gt;
-&lt;J&gt; → '.'&lt;K&gt;
-&lt;K&gt; → &lt;Digit&gt;&lt;K&gt;
-&lt;J&gt; → ','&lt;L&gt;
-&lt;K&gt; → ','&lt;L&gt;
-&lt;L&gt; → '+' &lt;M&gt;
-&lt;L&gt; → '-' &lt;M&gt;
-&lt;L&gt; → &lt;Digit&gt;&lt;N&gt;
-&lt;M&gt; → &lt;Digit&gt;&lt;N&gt;
-&lt;N&gt; → &lt;Digit&gt;&lt;N&gt;
-&lt;N&gt; → '.'&lt;P&gt;
-&lt;P&gt; → &lt;Digit&gt;&lt;P&gt;
-&lt;P&gt; → ')'&lt;End&gt;
-&lt;N&gt; → ')'&lt;End&gt;
-&lt;End&gt; → ';'
-&lt;Digit&gt;</> → "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-&lt;Letter&gt; → "a" | "b" | "c" | … | "y" | "z" | "A" | "B" | "C" | … | "Y" | "Z"
+<C> → <Letter><A>
+<A> → <Letter><B>
+<B> → <Letter><B>
+<B> → <Digit><D>
+<D> → <Digit><D>
+<B> → '='<E>
+<D> → '='<E>
+<E> → 'complex'<F>
+<F> → '('<G>
+<G> → '+'<H>
+<G> → '-'<H>
+<G> → <Digit><J>
+<H> → <Digit><J>
+<J> → <Digit><J>
+<J> → '.'<K>
+<K> → <Digit><K>
+<J> → ','<L>
+<K> → ','<L>
+<L> → '+' <M>
+<L> → '-' <M>
+<L> → <Digit><N>
+<M> → <Digit><N>
+<N> → <Digit><N>
+<N> → '.'<P>
+<P> → <Digit><P>
+<P> → ')'<End>
+<N> → ')'<End>
+<End> → ';'
+<Digit></> → "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+<Letter> → "a" | "b" | "c" | … | "y" | "z" | "A" | "B" | "C" | … | "Y" | "Z"
 ```
 
 Следуя введенному формальному определению грамматики, представим G[‹Start›] ее составляющими:
 ```bnf
-Z = ‹Start›;
-VT = {a, b, c, ..., z, A, B, C, ..., Z, ;, _, {, }, 0, 1, 2, ..., 9};
-VN = {‹Start›, ‹Struct›, ‹Name›, ‹NameRem›, ‹X›, ‹Space›, ‹Y›, ‹YRem›, ‹End›}.
+Z = <C>
+VT = {a, b, c, …, y, z, A, B, C, …, Y, Z, =, +, -, (, ), ., ,, ;, 0, 1, …, 8, 9}
+VN</sub></strong> = {<C>, <A>, <B>, <D>, <E>, <F>, <G>, <H>, <J>, <K>, <L>, <M>, <N>, <P>, <End>}
 ```
 
 ## Классификация грамматики: 
 
-Согласно классификации Хомского, грамматика G[‹Start›] является автоматной.
+Согласно классификации Хомского, грамматика G[‹C›] является автоматной.
 Все правила относятся к классу праворекурсивных продукций (A → aB | a | ε), следовательно, грамматика является полностью автоматной.
 
 ## Граф конечного автомата: 
 ![Граф конечного автомата](/graph.png)
 
 ## Тестовые примеры: 
-![Корректный ввод](/test1.png)
 
-![Ошибочный ввод](/test2.png)
+![Ошибочный ввод](/test111.png)
 
-![Ошибочный ввод](/test3.png)
+![Ошибочный ввод](/test222.png)
 
-![Ошибочный ввод](/test4.png)
+![Ошибочный ввод](/test333.png)
 
-![Ошибочный ввод](/test5.png)
-
-![Ошибочный ввод](/test6.png)
+![Ошибочный ввод](/test444.png)
